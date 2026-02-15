@@ -1,0 +1,62 @@
+﻿@page "/products/create"
+@page "/products/edit/{Id:long}"
+@using ProductsDemo.UI.Models
+@using ProductsDemo.UI.Services
+@inject ProductService ProductService
+@inject NavigationManager NavManager
+
+<h3>@(IsNew ? "Create Product" : "Edit Product")</h3>
+
+<EditForm Model="product" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-2">
+        <label>Name:</label>
+        <InputText class="form-control" @bind-Value="product.Name" />
+    </div>
+    <div class="mb-2">
+        <label>Price:</label>
+        <InputNumber class="form-control" @bind-Value="product.Price" />
+    </div>
+    <div class="mb-2">
+        <label>Description:</label>
+        <InputTextArea class="form-control" @bind-Value="product.Description" />
+    </div>
+
+    <button class="btn btn-success" type="submit">Save</button>
+    <button class="btn btn-secondary ms-2" type="button" @onclick="Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public long Id { get; set; }
+
+    private ProductModel product = new();
+    private bool IsNew => Id == 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine($"Id = {Id}, IsNew = {IsNew}");
+        if (!IsNew)
+        {
+            var existing = await ProductService.GetByIdAsync(Id);
+            if (existing != null)
+                product = existing;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (IsNew)
+            await ProductService.CreateAsync(product);
+        else
+            await ProductService.UpdateAsync(product);
+
+        NavManager.NavigateTo("/products");
+    }
+
+    private void Cancel()
+    {
+        NavManager.NavigateTo("/products");
+    }
+}
